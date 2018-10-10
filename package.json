@@ -1,0 +1,26 @@
+{
+  "name": "cartman",
+  "version": "1.0.0",
+  "description": "A simple download booster",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdiedX/cartman.git"
+  },
+  "preferGlobal": true,
+  "bin": "./src/index.js",
+  "author": "Adi Sivasankaran",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AdiedX/cartman/issues"
+  },
+  "homepage": "https://github.com/AdiedX/cartman#readme",
+  "dependencies": {
+    "async": "^2.6.1",
+    "bluebird": "^3.5.2",
+    "commander": "^2.19.0",
+    "request": "^2.88.0"
+  }
+}
