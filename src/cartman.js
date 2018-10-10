@@ -14,25 +14,26 @@ class Cartman {
    * @param {*} chunkSize
    */
   static async download(url, destination, portion, chunkSize) {
-    const MAX_PARALLEL_DOWNLOADS = this.getMaxParallelDownloads();
+    const { MAX_PARALLEL_DOWNLOADS, MEBI_BYTE } = this.getConfig();
+
     const sizeOfFileInBytes = parseInt(await this.getFileSize(url));
 
     let portionBytes;
     if (!portion) {
       portionBytes = sizeOfFileInBytes;
     } else {
-      portionBytes = portion * 1024 * 1024;
+      portionBytes = portion * MEBI_BYTE;
     }
 
     let chunkSizeBytes;
     if (!chunkSize) {
-      if (portionBytes >= 1024 * 1024) {
-        chunkSizeBytes = 1024 * 1024;
+      if (portionBytes >= MEBI_BYTE) {
+        chunkSizeBytes = MEBI_BYTE;
       } else {
         chunkSizeBytes = portionBytes/5;
       }
     } else {
-      chunkSizeBytes = chunkSize * 1024 * 1024;
+      chunkSizeBytes = Math.floor(chunkSize * MEBI_BYTE);
     }
 
     const byteRanges = this.calculateByteRanges(portionBytes, chunkSizeBytes);
@@ -98,8 +99,11 @@ class Cartman {
     });
   }
 
-  static getMaxParallelDownloads() {
-    return 1000;
+  static getConfig() {
+    return {
+      MAX_PARALLEL_DOWNLOADS: 1000,
+      MEBI_BYTE: 1024 * 1024
+    };
   }
 
   static directDownload(url, destination) {
@@ -108,5 +112,6 @@ class Cartman {
   }
 }
 
-Cartman.download("http://norvig.com/big.txt", "./download-file-each", 0.5, 0.1);
-// Cartman.directDownload("http://norvig.com/big.txt", "./download-file-direct");
+Cartman.download("http://norvig.com/big.txt", "./download-file");
+// Cartman.directDownload("http://norvig.com/big.txt", "./download-file");
+// Cartman.download("http://norvig.com/big.txt", "./download-file-partial", 4, 1);
