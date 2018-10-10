@@ -1,6 +1,10 @@
 # Cartman
 A simple download booster
 
+- [Installation](#installation)
+- [API](#api)
+- [Example Uses](#example-uses)
+
 ## Installation
 While Cartman is not yet an NPM package, you can follow these instruction to download him:
 
