@@ -15,63 +15,26 @@ class Cartman {
    * @param {Number} chunkSize - Size of the chunks in MiB
    */
   static async download(url, destination, portion, chunkSize) {
-    if (chunkSize > portion) {
-      throw new Error('chunk size cannot be bigger than portion size');
-    }
+    if (chunkSize > portion) throw new Error('chunk size cannot be bigger than portion size');
 
     const { MAX_PARALLEL_DOWNLOADS, MEBI_BYTE } = this.getConfig();
-
     // Ping the resource to get the total size of the file:
     const sizeOfFileInBytes = parseInt(await this.getFileSize(url));
 
-    if (portion * MEBI_BYTE > sizeOfFileInBytes) {
-      throw new Error('Portion size cannot be larger than the file itself');
-    }
+    if (portion * MEBI_BYTE > sizeOfFileInBytes) throw new Error('Portion size cannot be larger than the file itself');
 
-    // If no destination provided, set the default destination
-    if(!destination) {
-      destination = './cartman-download';
-    }
+    destination = destination || './cartman-download';
+    const portionBytes = portion ? portion * MEBI_BYTE : sizeOfFileInBytes;
 
-    let portionBytes;
-    // If no portion is provided, download the entire file:
-    if (!portion) {
-      portionBytes = sizeOfFileInBytes;
-    } else {
-      // Otherwise, convert mebibyte value to bytes for later use:
-      portionBytes = portion * MEBI_BYTE;
-    }
-
-    let chunkSizeBytes;
-    // If no chunk size is provided:
-    if (!chunkSize) {
-      // Set it to 1 MiB, if portion size is greater than 1 MiB
-      if (portionBytes >= MEBI_BYTE) {
-        chunkSizeBytes = MEBI_BYTE;
-      } else {
-        // Otherwise, set the default chunk size to 1/5th of what the portion size is:
-        chunkSizeBytes = portionBytes/5;
-      }
-    } else {
-      chunkSizeBytes = Math.floor(chunkSize * MEBI_BYTE);
-    }
+    const chunkSizeBytes = chunkSize
+      ? Math.floor(chunkSize * MEBI_BYTE)
+      : portionBytes >= MEBI_BYTE ? MEBI_BYTE : portionBytes/5;
 
     const byteRanges = this.calculateByteRanges(portionBytes, chunkSizeBytes);
     const destWriteStream = fs.createWriteStream(destination);
 
-    let options;
-
-    /**
-     * Async iteration in series due to:
-     * 1. async nature of HTTP GET calls
-     * 2. the need to preserve the order of data
-     * 
-     * @todo
-     * Previously, successful parallel download was achieved, however, order of data was not preserved
-     * How to download in parallel without losing data order?
-     */
     async.eachSeries(byteRanges, (range, callback) => {
-      options = {
+      const options = {
         url: url,
         headers: {
           'Range': range
@@ -79,21 +42,15 @@ class Cartman {
       };
 
       request.get(options, (err, response, body) => {
-        if (err) {
-          throw err;
-        }
+        if (err) throw err;
 
         destWriteStream.write(body, (err) => {
-          if (err) {
-            throw err;
-          }
+          if (err) throw err;
           callback();
         });
       });
     }, (err) => {
-      if (err) {
-        console.log(err);
-      }
+      if (err) console.log(err);
       destWriteStream.end();
       console.log('Finished downloading');
     });
@@ -154,9 +111,7 @@ class Cartman {
   static getFileSize(url) {
     return new Promise((resolve, reject) => {
       request.head(url, (err, response, body) => {
-        if (err) {
-          reject(err);
-        }
+        if (err) reject(err);
         resolve(response.headers['content-length']);
       });
     });
